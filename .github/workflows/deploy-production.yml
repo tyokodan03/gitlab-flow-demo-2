@@ -9,6 +9,8 @@ jobs:
     name: production 環境へデプロイ
     runs-on: ubuntu-latest
     environment: production   # ← ここで手動承認が発動する
+    permissions:
+      contents: write
 
     steps:
       - uses: actions/checkout@v4
