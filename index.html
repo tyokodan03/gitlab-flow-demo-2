@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>GitLab Flow Demo</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Noto+Sans+JP:wght@300;400;700&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --env: "main";
+      --env-color: #4ade80;
+      --bg: #0a0f0a;
+      --surface: #111811;
+      --border: #1f2e1f;
+      --text: #e2f0e2;
+      --muted: #5a7a5a;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Noto Sans JP', sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+
+    /* Grid background */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image:
+        linear-gradient(var(--border) 1px, transparent 1px),
+        linear-gradient(90deg, var(--border) 1px, transparent 1px);
+      background-size: 48px 48px;
+      opacity: 0.5;
+      pointer-events: none;
+    }
+
+    /* Glow */
+    body::after {
+      content: '';
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 600px;
+      height: 600px;
+      background: radial-gradient(circle, color-mix(in srgb, var(--env-color) 12%, transparent) 0%, transparent 70%);
+      pointer-events: none;
+      transition: background 0.6s ease;
+    }
+
+    .container {
+      position: relative;
+      z-index: 1;
+      text-align: center;
+      padding: 2rem;
+    }
+
+    .label {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.75rem;
+      letter-spacing: 0.3em;
+      color: var(--muted);
+      text-transform: uppercase;
+      margin-bottom: 1.5rem;
+      animation: fadeUp 0.6s ease both;
+    }
+
+    .env-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.6rem;
+      background: var(--surface);
+      border: 1px solid var(--env-color);
+      border-radius: 4px;
+      padding: 0.5rem 1.2rem;
+      margin-bottom: 2.5rem;
+      box-shadow: 0 0 24px color-mix(in srgb, var(--env-color) 20%, transparent);
+      animation: fadeUp 0.6s 0.1s ease both;
+      transition: border-color 0.6s, box-shadow 0.6s;
+    }
+
+    .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--env-color);
+      animation: pulse 2s ease-in-out infinite;
+      transition: background 0.6s;
+    }
+
+    .env-name {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.85rem;
+      color: var(--env-color);
+      letter-spacing: 0.1em;
+      transition: color 0.6s;
+    }
+
+    h1 {
+      font-size: clamp(2.5rem, 8vw, 5rem);
+      font-weight: 700;
+      letter-spacing: -0.03em;
+      line-height: 1;
+      margin-bottom: 1.5rem;
+      animation: fadeUp 0.6s 0.2s ease both;
+    }
+
+    h1 span {
+      color: var(--env-color);
+      transition: color 0.6s;
+    }
+
+    .description {
+      font-size: 1rem;
+      color: var(--muted);
+      font-weight: 300;
+      line-height: 1.8;
+      max-width: 420px;
+      animation: fadeUp 0.6s 0.3s ease both;
+    }
+
+    /* Branch flow diagram */
+    .flow {
+      margin-top: 3.5rem;
+      display: flex;
+      align-items: center;
+      gap: 0;
+      animation: fadeUp 0.6s 0.4s ease both;
+    }
+
+    .branch {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.4rem;
+    }
+
+    .branch-dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: var(--muted);
+      border: 2px solid var(--border);
+      transition: background 0.4s, border-color 0.4s, transform 0.4s;
+    }
+
+    .branch-dot.active {
+      background: var(--env-color);
+      border-color: var(--env-color);
+      box-shadow: 0 0 12px color-mix(in srgb, var(--env-color) 60%, transparent);
+      transform: scale(1.4);
+    }
+
+    .branch-label {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.65rem;
+      color: var(--muted);
+      letter-spacing: 0.05em;
+      transition: color 0.4s;
+    }
+
+    .branch-label.active {
+      color: var(--env-color);
+    }
+
+    .arrow {
+      width: 48px;
+      height: 2px;
+      background: linear-gradient(90deg, var(--border), var(--border));
+      position: relative;
+      margin-bottom: 1.3rem;
+    }
+
+    .arrow::after {
+      content: '';
+      position: absolute;
+      right: -1px;
+      top: 50%;
+      transform: translateY(-50%);
+      border: 5px solid transparent;
+      border-left-color: var(--border);
+    }
+
+    .meta {
+      margin-top: 3rem;
+      display: flex;
+      gap: 2rem;
+      justify-content: center;
+      animation: fadeUp 0.6s 0.5s ease both;
+    }
+
+    .meta-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.3rem;
+    }
+
+    .meta-key {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.6rem;
+      color: var(--muted);
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+    }
+
+    .meta-val {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.8rem;
+      color: var(--text);
+    }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(16px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.4; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <p class="label">GitLab Flow Demo</p>
+
+    <div class="env-badge">
+      <div class="dot"></div>
+      <span class="env-name" id="envName">main</span>
+    </div>
+
+    <h1>Hello, <span id="envLabel">Main</span>.</h1>
+
+    <p class="description" id="envDesc">
+      これは <code>main</code> ブランチです。<br />
+      すべての変更の起点となる最新コードが集まります。
+    </p>
+
+    <!-- Branch flow -->
+    <div class="flow">
+      <div class="branch">
+        <div class="branch-dot" id="dot-main"></div>
+        <span class="branch-label" id="label-main">main</span>
+      </div>
+      <div class="arrow"></div>
+      <div class="branch">
+        <div class="branch-dot" id="dot-staging"></div>
+        <span class="branch-label" id="label-staging">staging</span>
+      </div>
+      <div class="arrow"></div>
+      <div class="branch">
+        <div class="branch-dot" id="dot-production"></div>
+        <span class="branch-label" id="label-production">production</span>
+      </div>
+    </div>
+
+    <!-- Meta info -->
+    <div class="meta">
+      <div class="meta-item">
+        <span class="meta-key">Branch</span>
+        <span class="meta-val" id="metaBranch">main</span>
+      </div>
+      <div class="meta-item">
+        <span class="meta-key">Deploy</span>
+        <span class="meta-val" id="metaDeploy">auto</span>
+      </div>
+      <div class="meta-item">
+        <span class="meta-key">Approval</span>
+        <span class="meta-val" id="metaApproval">—</span>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // 環境変数はビルド時にGitHub Actionsが置換する
+    // デフォルトは "main"
+    const ENV = "%%ENV%%";
+
+    const config = {
+      main: {
+        name: "main",
+        label: "Main",
+        color: "#4ade80",
+        desc: "これは <code>main</code> ブランチです。<br />すべての変更の起点となる最新コードが集まります。",
+        deploy: "auto",
+        approval: "—",
+      },
+      staging: {
+        name: "staging",
+        label: "Staging",
+        color: "#facc15",
+        desc: "これは <code>staging</code> 環境です。<br />本番リリース前の動作確認を行う環境です。",
+        deploy: "auto",
+        approval: "—",
+      },
+      production: {
+        name: "production",
+        label: "Production",
+        color: "#f87171",
+        desc: "これは <code>production</code> 環境です。<br />手動承認を経てリリースされた本番環境です。",
+        deploy: "manual",
+        approval: "required",
+      },
+    };
+
+    const c = config[ENV] || config.main;
+
+    // Apply env color
+    document.documentElement.style.setProperty('--env-color', c.color);
+
+    // Update text
+    document.getElementById('envName').textContent = c.name;
+    document.getElementById('envLabel').textContent = c.label;
+    document.getElementById('envDesc').innerHTML = c.desc;
+    document.getElementById('metaBranch').textContent = c.name;
+    document.getElementById('metaDeploy').textContent = c.deploy;
+    document.getElementById('metaApproval').textContent = c.approval;
+
+    // Activate branch dot
+    const dot = document.getElementById('dot-' + c.name);
+    const lbl = document.getElementById('label-' + c.name);
+    if (dot) { dot.classList.add('active'); }
+    if (lbl) { lbl.classList.add('active'); }
+  </script>
+</body>
+</html>

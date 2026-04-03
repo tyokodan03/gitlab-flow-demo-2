@@ -1,0 +1,33 @@
+name: Deploy to Production
+
+on:
+  push:
+    branches: [production]
+
+jobs:
+  deploy-production:
+    name: production 環境へデプロイ
+    runs-on: ubuntu-latest
+    environment: production   # ← ここで手動承認が発動する
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: 環境変数を埋め込む
+        run: |
+          # HTMLの %%ENV%% プレースホルダーを "production" に置換
+          sed -i 's/%%ENV%%/production/g' index.html
+          echo "✅ ENV = production をHTMLに埋め込みました"
+
+      - name: GitHub Pages へデプロイ (production)
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./
+          destination_dir: production       # /production/ サブパスに配置
+          publish_branch: gh-pages
+
+      - name: デプロイ完了通知
+        run: |
+          echo "🚀 production 環境へのデプロイが完了しました"
+          echo "URL: https://<your-username>.github.io/<repo-name>/production/"

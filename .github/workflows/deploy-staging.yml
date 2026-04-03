@@ -1,0 +1,33 @@
+name: Deploy to Staging
+
+on:
+  push:
+    branches: [staging]
+
+jobs:
+  deploy-staging:
+    name: staging 環境へデプロイ
+    runs-on: ubuntu-latest
+    environment: staging   # Environment保護ルールを適用（今回は自動）
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: 環境変数を埋め込む
+        run: |
+          # HTMLの %%ENV%% プレースホルダーを "staging" に置換
+          sed -i 's/%%ENV%%/staging/g' index.html
+          echo "✅ ENV = staging をHTMLに埋め込みました"
+
+      - name: GitHub Pages へデプロイ (staging)
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./
+          destination_dir: staging          # /staging/ サブパスに配置
+          publish_branch: gh-pages
+
+      - name: デプロイ完了通知
+        run: |
+          echo "🚀 staging 環境へのデプロイが完了しました"
+          echo "URL: https://<your-username>.github.io/<repo-name>/staging/"

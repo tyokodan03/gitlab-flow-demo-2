@@ -1,0 +1,23 @@
+name: CI (main)
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  lint:
+    name: Lint & Validate
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: HTML構文チェック
+        run: |
+          echo "✅ HTML syntax check passed (demo)"
+          # 実プロジェクトでは htmlhint や eslint を実行する
+          # npx htmlhint index.html
+
+      - name: 完了通知
+        run: echo "🎉 main ブランチのCIが完了しました"
