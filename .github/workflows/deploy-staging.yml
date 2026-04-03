@@ -9,6 +9,8 @@ jobs:
     name: staging 環境へデプロイ
     runs-on: ubuntu-latest
     environment: staging   # Environment保護ルールを適用（今回は自動）
+    permissions:
+      contents: write
 
     steps:
       - uses: actions/checkout@v4
